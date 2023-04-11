@@ -1,56 +1,37 @@
+
 terraform {
+  required_version = ">= 1.0" # which means any version equal & above 0.14 like 0.15, 0.16 etc and < 1.xx
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "3.26.0"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "3.0.1"
+      version = "~> 3.0"
     }
   }
-  required_version = "~> 1.0"
+# Adding Backend as S3 for Remote State Storage
+#  backend "s3" {
+#     encrypt        = true
+#    bucket = "terraform-on-aws-for-ec2"
+#    key    = "dev/project1-vpc/terraform.tfstate"
+#    region = "us-east-1"
 
-  backend "remote" {
-    organization = "REPLACE_ME"
+    # Enable during Step-09
+    # For State Locking
+#    dynamodb_table = "dev-project1-vpc"
+#  }
+}
+resource "aws_s3_bucket" "example123" {
+  bucket = "my-tf-test-bucket11123456789"
 
-    workspaces {
-      name = "REPLACE_ME"
-    }
+  tags = {
+    Name        = "My bucket"
+    Environment = "Dev"
   }
 }
 
 
+
+# Provider Block
 provider "aws" {
-  region = "us-east-1"
-}
-
-
-
-resource "random_pet" "sg" {}
-
-resource "aws_instance" "web" {
-  ami                    = "ami-09e67e426f25ce0d7"
-  instance_type          = "t2.micro"
-  vpc_security_group_ids = [aws_security_group.web-sg.id]
-
-  user_data = <<-EOF
-              #!/bin/bash
-              echo "Hello, World" > index.html
-              nohup busybox httpd -f -p 8080 &
-              EOF
-}
-
-resource "aws_security_group" "web-sg" {
-  name = "${random_pet.sg.id}-sg"
-  ingress {
-    from_port   = 8080
-    to_port     = 8080
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-output "web-address" {
-  value = "${aws_instance.web.public_dns}:8080"
+  region  = "us-east-1"
+  profile = "default"
 }
